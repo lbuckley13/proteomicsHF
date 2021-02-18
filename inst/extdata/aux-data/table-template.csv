@@ -1,0 +1,11 @@
+﻿Table Var,Expression,Summary Function
+Age,age,mean
+Race (Black),race,percent
+Sex (Male),sex,percent
+BMI (kg/m^2),bmi,mean
+eGFR,egfr,mean
+Hx of Smoking,smk,percent
+Hx of CAD,cad,percent
+Hx of DM,dm,percent
+Hx of Afib,af,percent
+Hx of HTN,htn,percent

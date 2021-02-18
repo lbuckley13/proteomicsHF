@@ -1,0 +1,4 @@
+Variable,Expression,Label
+fullfuptime,as.double(C7_DATE_INCHF19 - v3date31),Visit 3 Heart Failure Follow Up Time
+fuptime,"dplyr::if_else(fullfuptime >= 3653, 3653, fullfuptime)",Visit 3 Heart Failure Follow Up Time
+hfdiag,"dplyr::if_else(fullfuptime >= 3653, 0, C7_INCHF19, 0)",Visit 3 Incident Heart Failure Dx

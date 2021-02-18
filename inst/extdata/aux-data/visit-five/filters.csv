@@ -1,0 +1,3 @@
+Variable,Operator,Expression
+v5_prevhf52,==,FALSE
+fuptime,>,0

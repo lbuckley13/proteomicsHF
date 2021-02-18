@@ -1,0 +1,15 @@
+Variable,Expression,Label
+id,id,Study ID
+grip,gripbest51,V5 Physical Function Grip Best of Two Trials
+fevratio,v5_fev1fvc51,v5 forced expiratory ratio fev1/fvc %
+ppfvc,v5_ppfvc51,v5 % predicted forced vital capacity
+ppfev,v5_ppfev151,v5 % predicted forced expiratory volume in 1 second
+anemia,as.factor(v5_anemia == 1),"Visit 5 anemia using hgb <12 for females, <13 for males: 1=y, 0=n"
+pwv,v5_pwv,pulse wave velocity
+pwv.abnl,as.factor(v5_pwv_abnl == 1),Abnormal Pulse Wave Velocity
+map,v5_map,mean arterial pressure
+fatmass,v5_fatmass,Fat Mass
+leanmass,v5_leanmass,Lean Fat Mass
+highfatmass,as.factor(v5_highfatmass == 1),Abnormal Fat Mass
+highwthr,as.factor(v5_high_wthr == 1),Abnormal Waist to Hip Ratio
+lowgrip,as.factor(v5_gripstr_abnl == 1),Abnormally low Grip Strength for gender and BMI

@@ -1,0 +1,12 @@
+Variable,Expression,Label
+id,id,Study ID
+age,v3age31,Visit 3 Age
+bmi,v3_bmi32,Visit 3 BMI (kg/m2)
+egfr,v2_ckdepi_egfr,Visit 2 eGFR by CKD-EPI
+smk,as.factor(v3_cigt31  == 1),Visit 3 Smoking Status
+cad,as.factor(v3_prvchd33 == 1),Visit 3 Prevalent CAD
+race,as.factor(black == 1),Race (black == 1)
+sex,as.factor(male == 1),Sex (male == 1)
+af,as.factor(afinc & dateafinc <= v3date31),Visit 3 Prevalent Afib
+dm,"as.factor(dplyr::if_else(as.logical(v3_diabts34) | as.logical(v2_diabts23) | as.logical(v1_diabts03), TRUE, FALSE, FALSE))",Visit 3 Prevalent DM
+htn,"as.factor(dplyr::if_else(as.logical(v3_hypert35) | as.logical(v2_hypert25) | as.logical(v1_hypert05), TRUE, FALSE, FALSE))",Visit 3 Prevalent Hypertension

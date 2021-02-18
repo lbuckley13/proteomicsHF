@@ -1,0 +1,6 @@
+*.html
+*.R
+*.rds
+*_cache
+*.csv
+.Rhistory

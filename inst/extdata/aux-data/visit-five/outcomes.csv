@@ -1,0 +1,5 @@
+Variable,Expression,Label
+hfdiag,!is.na(adjudhf_bwh),Incident Heart Failure Dx
+hfref,hfdiag & adjudhf_bwh == 1,Incident HFrEF
+hfpef,hfdiag & adjudhf_bwh == 2,Incident HFpEF
+fuptime,as.double(adjudhfdate - v5date51),Heart Failure Follow Up Time V5

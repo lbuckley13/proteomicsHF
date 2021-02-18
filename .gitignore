@@ -1,6 +1,11 @@
 .Rproj.user
 .RData
 .RHistory
-inst
+inst/extdata/study-data
 .DS_Store
-vignettes
+vignettes/*.html
+vignettes/*.R
+vignettes/*.rds
+vignettes/*_cache
+vignettes/*.csv
+vignettes/.Rhistory

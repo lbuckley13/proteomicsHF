@@ -1,0 +1,25 @@
+Variable,Expression,Label
+id,id,Study ID
+bsa,ech11/ech12,Body Surface Area
+lvedvi,ech8/bsa,LV End Diastolic Volume Index
+lvedd,ech4,LV End Diastolic Dim (cm)
+mlvwt,ech14,Mean LV Wall Thickness
+lvrwt,ech13,LV Relative Wall Thickness
+lvmi,ech12,LV Mass Index
+lvesvi,ech9/bsa,LV End Systolic Volume Index
+lvesd,ech5,LV End Systolic Dim (cm)
+lvef,ech10,LV Ejection Fraction
+peakls,ech47,Average Peak Longitudinal Strain (%)
+peakcs,ech53,Average Peak Circumfrential Strain (%)
+ewave,ech20,Peak E Wave Velocity (cm/s)
+awave,ech21,Peak A Wave Velocity (cm/s)
+eprimelat,ech24,e' lat - Lateral Early Diastolic Myocardial Velocity
+eprimesep,ech25,e' sept - Septal Early Diastolic Myocardial Velocity
+eeplatratio,ech20/ech24,E/e' Lateral Ratio
+eepsepratio,ech20/ech26,E/e' Septal Ratio
+lavi,ech17,Left Atrial Volume Index (ml/m2)
+maxlaapd,ech15,Maximal LA Anterior Posterior Diameter (cm)
+trvel,ech40,Tricuspid Regurgitation Jet Velocity (cm/s)
+pasp,4e-4 * ech40^2 + 5,Pulmonary Artery Systolic Pressure
+rvfac,ech38,Right Ventricular Fractional Area Change
+tapsmv,ech39,Tricuspid Annular Peak Systolic Myocardial Velocity

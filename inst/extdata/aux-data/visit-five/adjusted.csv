@@ -1,0 +1,12 @@
+Variable,Expression,Label
+id,id,Study ID
+age,v5age51,Visit 5 Age
+bmi,v5_bmi51,Visit 5 BMI (kg/m2)
+egfr,v5_ckdepi_egfr,Visit 5 eGFR by CKD-EPI
+race,as.factor(black == 1),Race (black == 1)
+sex,as.factor(male == 1),Sex (male == 1)
+smk,as.factor(v5_cursmk52 == 1),Current Smoking Status
+cad,as.factor(v5_prvchd53 == 1 | v5_hxofmi52 == 1),Prevalent CAD
+dm,as.factor(v5_ever_dm == 1),Visit 5 Prevalent DM
+af,as.factor(v5_prvaf51 == 1),Visit 5 Prevalent Afib
+htn,as.factor(v5_ever_htn == 1),Visit 5 Prevalent Hypertension

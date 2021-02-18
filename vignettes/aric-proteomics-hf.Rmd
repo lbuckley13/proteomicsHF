@@ -1,0 +1,351 @@
+---
+title: |
+    | ARIC Heart Failure Proteomics:
+    | Analysis and Results
+author: 'Pranav Dorbala'
+email: 'pdorbala@bwh.harvard.edu'
+bibliography: references.bib
+date: "January 22nd, 2021"
+link-citations: no
+output: 
+    pdf_document:
+        template: jdf-template.pandoc
+        fig_caption: true
+        citation_package: biblatex
+        keep_tex: true
+vignette: >
+  %\VignetteIndexEntry{aric-proteomics-hf}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+abstract: Placeholder
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+options(rmarkdown.html_vignette.check_title = FALSE)
+```
+
+```{r libraries, message=FALSE, warning=FALSE}
+source('../R/load-data.R')
+source('../R/make-tables.R')
+source('../R/temp-fig1.R')
+source('../R/cox-array.R')
+source('../R/elastic-net.R')
+source('../R/random-forest.R')
+source('../R/wgcna.R')
+
+library(magrittr)
+
+set.seed(101010)
+doParallel::registerDoParallel(12)
+future::plan(future::multisession, workers = 8)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+path <- function(...) { 
+  return(file.path('..', 'inst', 'extdata', ...))  
+}
+
+label.path <- path('proteinMapping.csv')
+study.path <- path('ARICmaster_121820.dta')
+
+soma5.path <- path('somaV5.txt')
+soma3.path <- path('somaV3.txt')
+
+mods5.path <- path('visit-five')
+mods3.path <- path('visit-three')
+
+addtl.vars <- path('ARIC_newvar_010621.dta')
+addtl.mods <- path('visit-five', 'adtlvars.csv')
+echov.mods <- path('visit-five', 'echovars.csv')
+
+```
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+
+labels <-
+  get.labels(label.path, sid,
+             uniprot.full.name,
+             entrezgenesymbol,
+             flag2 == 0)
+
+adjust.vars <- 
+  readr::read_csv(file.path(mods5.path, 
+                            'adjusted.csv'))
+
+aric.master <- 
+  haven::read_dta(study.path)
+
+soma.data.5 <-
+  get.soma(soma5.path, labels = labels)
+
+soma.data.3 <-
+  get.soma(soma3.path, labels = labels)
+
+proteins <- labels$term
+time <- "fuptime"
+outc <- "hfdiag"
+
+adjust <- adjust.vars$Variable[-1]
+vars <- c(proteins, adjust, time, outc)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+visit.five <- 
+  get.visit(soma.data = soma.data.5,
+            path.mods = mods5.path,
+            master = aric.master)
+
+table1 <- 
+  make.tables(visit.five, 
+              time, outc, 
+              path('table-template.csv'))
+
+res <- 
+  consort('.', mods5.path, soma.data.5, 
+          visit.five, labels, time, outc)
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+visit.three <- 
+  get.visit(soma.data = soma.data.3,
+            path.mods = mods3.path,
+            master = aric.master)
+
+table2 <- 
+  make.tables(visit.three,
+              time, outc,
+              path('table-template.csv'))
+
+res2 <- 
+  consort('.', mods3.path, soma.data.3, 
+          visit.three, labels, time, outc)
+
+```
+
+```{r fig.height=6, echo=FALSE}
+res
+```
+
+```{r, echo=FALSE}
+knitr::kable(table1)
+```
+
+```{r fig.height=6, echo=FALSE}
+res2
+```
+
+```{r, echo=FALSE}
+knitr::kable(table2)
+```
+
+```{r}
+
+num.var <- numeric.id(visit.five, adjust)
+
+fifth.visit <- visit.five  %>%
+  get.scaled(num.var, proteins)
+
+third.visit <- visit.three %>%
+  get.scaled(num.var, proteins)
+
+```
+
+
+```{r}
+
+fifth <- fifth.visit %>% 
+  dplyr::select(dplyr::all_of(vars))
+
+univariate.results <-
+  cox.arry(proteins, fifth, 
+           time, outc, adjust, 1)
+
+```
+
+```{r}
+
+third <- third.visit %>% 
+  dplyr::select(dplyr::all_of(vars))
+
+validation.results <- 
+  cox.arry(proteins, third, 
+           time, outc,  adjust, 2)
+```
+
+```{r}
+
+plot.data <-
+  dplyr::bind_rows(univariate.results,
+                   validation.results) %>%
+  dplyr::mutate(Name = labels[term, "name"])
+
+bonferroni <- 
+  terms.to.keep(plot.data,
+                .pval = 0.05/length(proteins), 1)
+falsediscr <- 
+  terms.to.keep(plot.data, 
+                .pval = 0.05, 1)
+
+retained <-
+  terms.to.keep(plot.data, 
+                .pval = 0.05, 2, 
+                .terms = bonferroni$kept)
+
+```
+
+```{r}
+
+"<=== Sig at BF Visit 5 ===> Proteins: " %>%
+  paste0(length(bonferroni$kept)) %>%
+  print()
+
+"<=== Sig at BF Visit 5" %>% 
+  paste0("FDR Visit 3 ===> Proteins: ",
+         length(retained$kept)) %>%
+  print()
+
+"<=== Sig at FDR Visit 5 ===> Proteins: " %>%
+  paste0(length(falsediscr$kept)) %>%
+  print()
+
+```
+
+```{r}
+
+bf.visit.five <- bonferroni$data %>% 
+  dplyr::filter(src == 1) %>% 
+  dplyr::arrange(pval) %>%
+  dplyr::left_join(validation.results %>% 
+                     dplyr::select(term, desc),
+                   by = "term",
+                   suffix = c(".V5", ".V3")) %>%
+  dplyr::select(term, Name, desc.V5, desc.V3) %>%
+  dplyr::mutate(r = dplyr::if_else(term %in% retained$kept, 
+                                   "+", ""))
+
+```
+
+
+```{r}
+
+plot.data.visit.five <- 
+  dplyr::left_join(univariate.results,
+                   validation.results,
+                   by = "term",
+                   suffix = c(".V5", ".V3"))
+
+volcanoPlot(plot.data.visit.five, 
+            length(proteins),
+            length(bonferroni$kept),
+            suffix = c(".V5", ".V3"))
+
+```
+
+
+```{r}
+
+fifth.lasso <- elastic.net(fifth.visit, 
+                           bonferroni$kept, 
+                           adjust, time, outc)
+
+fifth.score <- get.score(fifth.visit, 
+                         fifth.lasso$coefs, 
+                         adjust, time, outc)
+
+third.score <- get.score(third.visit, 
+                         fifth.lasso$coefs, 
+                         adjust, time, outc)
+
+```
+
+```{r randomForests, cache=TRUE}
+
+random.forest.list <- 
+  filter.rf(fifth, time, outc, 30, adjust)
+
+min.tree <- select.min.tree(random.forest.list)
+
+third.visit.rf <- 
+  predict.new.tree(third, min.tree$rand.tree, 
+                   time, outc)
+
+fifth.score.rf <- 
+  rf.tree.score(fifth, min.tree$rand.tree,
+                time, outc)
+
+third.score.rf <- 
+  rf.tree.score(third, third.visit.rf, 
+                time, outc)
+
+p <- plot.var.imp(min.tree$rand.tree, labels)
+
+```
+
+```{r}
+
+wg.data <- fifth.visit %>%
+  dplyr::select(dplyr::contains("SeqId"))
+
+sft <- soft.threshold(wg.data)
+clustered.tree <- hierTree(wg.data, sft)
+
+```
+
+```{r}
+
+eigenGenes <- 
+  calculate.eigengenes(wg.data, clustered.tree$dynCl)
+
+plot.new.colors(clustered.tree$htree, 
+                clustered.tree$dynCl, 
+                eigenGenes$mergedColors,
+                c("Old Colors", "New Colors"))
+
+```
+
+```{r}
+
+eigenData <- eigenGenes$mergedMEs %>%
+  dplyr::mutate_all(scale, T, T) %>%
+  dplyr::bind_cols(fifth.visit %>% 
+    dplyr::select(dplyr::all_of(c(adjust, time,outc))))
+
+mod.summary <- 
+  summarize.modules(wg.data, 
+                    eigenGenes$mergedColors,
+                    sft, labels) %>%
+  dplyr::mutate(color = paste0("ME", color))
+
+module.incident.hf <- cox.arry(mod.summary$color,
+                               eigenData, time, outc, 
+                               adjust, .src = 1) %>%
+  dplyr::left_join(mod.summary, by = c("term" = "color")) %>%
+  dplyr::select(term, Name, desc, dplyr::everything())
+
+```
+
+
+```{r eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+fifth.visit.adtl <- 
+  add.data(new.path = addtl.vars, 
+           old.data = fifth.visit,
+           mods = addtl.mods)
+
+fifth.visit.echo <- 
+  add.data(new.path = study.path,
+           old.data = fifth.visit.adtl,
+           mods = echov.mods)
+```
