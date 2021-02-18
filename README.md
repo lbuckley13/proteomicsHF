@@ -5,8 +5,6 @@
 
 <!-- badges: start -->
 
-[![GitHub
-license](https://img.shields.io/github/license/Naereen/StrapDown.js.svg)](https://github.com/pranavdorbala/proteomicsHF/blob/main/LICENSE)
 [![ForTheBadge
 built-by-developers](http://ForTheBadge.com/images/badges/built-by-developers.svg)](https://github.com/pranavdorbala/proteomicsHF)
 <!-- badges: end -->
