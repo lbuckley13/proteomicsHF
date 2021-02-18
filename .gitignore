@@ -1,7 +1,7 @@
 .Rproj.user
 .RData
 .RHistory
-inst/extdata/study-data
+inst/extdata/study-data/ARIC*
 .DS_Store
 vignettes/*.html
 vignettes/*.R
