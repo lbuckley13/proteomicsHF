@@ -1,0 +1,6 @@
+.Rproj.user
+.RData
+.RHistory
+inst
+.DS_Store
+vignettes

@@ -1,0 +1,29 @@
+Package: proteomicsHF
+Title: ARIC Proteomics of Heart Failure -- Biomarker Discovery Pipeline
+Version: 1.1.0
+Date: 2021-02-19
+Depends: R (>= 3.6), stats, graphics, grDevices, utils, magrittr, rlang
+Imports: methods, tidyverse (>= 1.3.0), dplyr (>= 1.0.2), purrr (>= 0.3.4), readr (>= 1.4.0), tibble (>= 3.0.4), tidyr (>= 1.1.2),  haven (>= 2.3.1), labelled (>= 2.7.0), mice (>= 3.12.0), survival (>= 3.2), glue (>= 1.4.0), tictoc (>= 1.0), furrr (>= 0.2.1), EnhancedVolcano (>= 1.4.0), ggplot2 (>= 3.2.1), glmnet (>= 4.0), randomForestSRC (>= 2.9.3), ggRandomForests (>= 2.0.1), WGCNA (>= 1.69), gridExtra (>= 2.3), fastcluster (>= 1.1), dynamicTreeCut (>= 1.63)
+Authors@R: 
+    person(given = "Pranav",
+           family = "Dorbala",
+           role = c("aut", "cre"),
+           email = "pdorbala@bwh.harvard.edu")
+Description: Functions necessary to analyze and replicate results of biomarker 
+    discovery pipeline for SOMALogic 5K Assay proteins associated with incident
+    heart failure. Results are cached and derived from the Atherosclerosis Risk
+    in Communities (ARIC) cohort from visits three and five. Includes functions 
+    to set adjustment variables, impute missing variables, summarize data, 
+    conduct uni-protein and multi-protein analyses and visualize data. Also
+    includes a number of utility functions for data manipulation and reporting.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1
+Author: Pranav Dorbala [aut, cre]
+Maintainer: Pranav Dorbala <pdorbala@bwh.harvard.edu>
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
