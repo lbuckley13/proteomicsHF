@@ -47,28 +47,28 @@ future::plan(future::multisession, workers = 8)
 
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r file.path.setup, message=FALSE, warning=FALSE}
 
 path <- function(...) { 
   return(file.path('..', 'inst', 'extdata', ...))  
 }
 
-label.path <- path('proteinMapping.csv')
-study.path <- path('ARICmaster_121820.dta')
+label.path <- path('study-data', 'proteinMapping.csv')
+study.path <- path('study-data', 'ARICmaster_121820.dta')
 
-soma5.path <- path('somaV5.txt')
-soma3.path <- path('somaV3.txt')
+soma5.path <- path('study-data', 'ARICsomaV5.txt')
+soma3.path <- path('study-data', 'ARICsomaV3.txt')
 
-mods5.path <- path('visit-five')
-mods3.path <- path('visit-three')
+mods5.path <- path('aux-data', 'visit-five')
+mods3.path <- path('aux-data', 'visit-three')
 
-addtl.vars <- path('ARIC_newvar_010621.dta')
-addtl.mods <- path('visit-five', 'adtlvars.csv')
-echov.mods <- path('visit-five', 'echovars.csv')
+addtl.vars <- path('study-data', 'ARIC_newvar_010621.dta')
+addtl.mods <- path('aux-data', 'visit-five', 'adtlvars.csv')
+echov.mods <- path('aux-data', 'visit-five', 'echovars.csv')
 
 ```
 
-```{r echo=TRUE, message=FALSE, warning=FALSE}
+```{r data.load, echo=TRUE, message=FALSE, warning=FALSE}
 
 labels <-
   get.labels(label.path, sid,
@@ -98,7 +98,7 @@ vars <- c(proteins, adjust, time, outc)
 
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r v5.data.processing, message=FALSE, warning=FALSE}
 
 visit.five <- 
   get.visit(soma.data = soma.data.5,
@@ -116,7 +116,7 @@ res <-
 
 ```
 
-```{r message=FALSE, warning=FALSE}
+```{r v3.data.processing, message=FALSE, warning=FALSE}
 
 visit.three <- 
   get.visit(soma.data = soma.data.3,
@@ -134,23 +134,23 @@ res2 <-
 
 ```
 
-```{r fig.height=6, echo=FALSE}
+```{r v5.consort fig.height=6, echo=FALSE}
 res
 ```
 
-```{r, echo=FALSE}
+```{r v5.table1, echo=FALSE}
 knitr::kable(table1)
 ```
 
-```{r fig.height=6, echo=FALSE}
+```{r v3.consort, fig.height=6, echo=FALSE}
 res2
 ```
 
-```{r, echo=FALSE}
+```{r v3.table1 echo=FALSE}
 knitr::kable(table2)
 ```
 
-```{r}
+```{r visit.data.scaling}
 
 num.var <- numeric.id(visit.five, adjust)
 
@@ -163,7 +163,7 @@ third.visit <- visit.three %>%
 ```
 
 
-```{r}
+```{r visit.five.uniprotein}
 
 fifth <- fifth.visit %>% 
   dplyr::select(dplyr::all_of(vars))
@@ -174,7 +174,7 @@ univariate.results <-
 
 ```
 
-```{r}
+```{r visit.three.uniprotein}
 
 third <- third.visit %>% 
   dplyr::select(dplyr::all_of(vars))
@@ -184,7 +184,7 @@ validation.results <-
            time, outc,  adjust, 2)
 ```
 
-```{r}
+```{r replication.analysis.univariate}
 
 plot.data <-
   dplyr::bind_rows(univariate.results,
@@ -205,7 +205,7 @@ retained <-
 
 ```
 
-```{r}
+```{r num.repl.proteins}
 
 "<=== Sig at BF Visit 5 ===> Proteins: " %>%
   paste0(length(bonferroni$kept)) %>%
@@ -222,7 +222,7 @@ retained <-
 
 ```
 
-```{r}
+```{r univariate.data.export}
 
 bf.visit.five <- bonferroni$data %>% 
   dplyr::filter(src == 1) %>% 
@@ -238,7 +238,7 @@ bf.visit.five <- bonferroni$data %>%
 ```
 
 
-```{r}
+```{r uniprotein.volcano.plot}
 
 plot.data.visit.five <- 
   dplyr::left_join(univariate.results,
@@ -254,7 +254,7 @@ volcanoPlot(plot.data.visit.five,
 ```
 
 
-```{r}
+```{r elastic.net.survival}
 
 fifth.lasso <- elastic.net(fifth.visit, 
                            bonferroni$kept, 
@@ -270,7 +270,7 @@ third.score <- get.score(third.visit,
 
 ```
 
-```{r randomForests, cache=TRUE}
+```{r randomForests.survival, cache=TRUE}
 
 random.forest.list <- 
   filter.rf(fifth, time, outc, 30, adjust)
@@ -293,7 +293,7 @@ p <- plot.var.imp(min.tree$rand.tree, labels)
 
 ```
 
-```{r}
+```{r weighted.gene}
 
 wg.data <- fifth.visit %>%
   dplyr::select(dplyr::contains("SeqId"))
@@ -303,7 +303,7 @@ clustered.tree <- hierTree(wg.data, sft)
 
 ```
 
-```{r}
+```{r eigenGenes}
 
 eigenGenes <- 
   calculate.eigengenes(wg.data, clustered.tree$dynCl)
@@ -315,7 +315,7 @@ plot.new.colors(clustered.tree$htree,
 
 ```
 
-```{r}
+```{r module.summaries}
 
 eigenData <- eigenGenes$mergedMEs %>%
   dplyr::mutate_all(scale, T, T) %>%
@@ -337,7 +337,10 @@ module.incident.hf <- cox.arry(mod.summary$color,
 ```
 
 
-```{r eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+```{r echo.as.outcome, eval=FALSE, echo=TRUE, message=FALSE, warning=FALSE}
+
+echo.vars <- readr::read_csv(echov.mods)[[1]][c(-1, -2)]
+adtl.vars <- readr::read_csv(addtl.mods)[[1]][c(-1)]
 
 fifth.visit.adtl <- 
   add.data(new.path = addtl.vars, 
@@ -347,5 +350,68 @@ fifth.visit.adtl <-
 fifth.visit.echo <- 
   add.data(new.path = study.path,
            old.data = fifth.visit.adtl,
-           mods = echov.mods)
+           mods = echov.mods) 
+
+num.var.adtl <- 
+  numeric.id(fifth.visit.echo,
+             c(echo.vars, 
+               adtl.vars))
+
+fifth.visit.echo.scaled <- 
+  get.scaled(fifth.visit.echo, 
+             num.var.adtl)
+
+univariate.echo.models <- 
+  lin.arry.aggr(proteins,
+                fifth.visit.echo.scaled,
+                echo.vars, adjust, labels) 
+
+numeric.echo.regression <- 
+  univariate.echo.models$numeric
+
+table.echo.regression <- 
+  univariate.echo.models$character 
+
+univariate.echo.terms.bonf <- 
+  lin.reg.terms.to.keep(univariate.echo.models$all.res, 4877)
+
+```
+
+
+```{r top.candidates.echo.outcomes, cache=TRUE}
+
+top.candidates.echos <- 
+  univariate.echo.terms.bonf$candidates %>% 
+  purrr::flatten_chr() %>% 
+  table() %>% 
+  sort(decreasing = TRUE)
+
+top.candidates.echos.names <-
+  top.candidates.echos
+
+names(top.candidates.echos.names) <- 
+  labels[names(top.candidates.echos), "name"] %>%
+  substr(1, 40)
+
+full.cands <- 
+  names(top.candidates.echos)[which(top.candidates.echos > 4)]
+```
+
+```{r echo.elastic.nets, cache=TRUE}
+
+echo.elastic.nets <- 
+  linear.elastic.net.array(fifth.visit.echo.scaled, adjust,
+                           univariate.echo.terms.bonf) %>%
+  linear.get.score.enet(fifth.visit.echo.scaled, adjust)
+
+
+```
+
+
+```{r echo.random.forests, cache=TRUE}
+
+echo.randomforests <- 
+  linear.filter.rf.array(fifth.visit.echo.scaled,
+                         echo.vars, 30, adjust)
+
 ```

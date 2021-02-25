@@ -40,16 +40,21 @@
 cox.modl <- function(.data, time = "fuptime", outcome = "hfdiag",
                      protein, .adjust = adjust, extend = 100) {
 
-  formula <- glue::glue("survival::Surv({time}, {outcome}) ~ {protein} + {paste0(.adjust, collapse = '+')}")
-  cox.mod <- survival::coxph(as.formula(formula), data = .data) %>% summary()
+  formula <- glue::glue("survival::Surv({time}, {outcome}) ~ {protein} + {paste0(.adjust, collapse = '+')}") %>%
 
-  hazr <- cox.mod$conf.int[1, c(1, 3, 4)]
+  cox.mod <- survival::coxph(as.formula(fomula), data = .data) %>%
+    broom::tidy(exponentiate = TRUE)
+
+  hazr <- cox.mod[1, c('estimate', 'conf.low', 'conf.high')] %>% unlist()
   HR  <- formatC(hazr, format = "f", 3, 5)
 
-  pval <- cox.mod$coefficients[1,5]
+  pval <- cox.mod[1, 'p.value'] %>% unlist()
   pv  <- formatC(pval, format = "e", 2)
-  st <- (-log10(pval) - 1.30103) %>% floor() %>% {c(., -1) + 1} %>% max() %>%
-    {strrep("*", .)} %>% substring(1, extend)
+
+  st <- floor(-log10(pval) + log10(0.05)) %>%
+    {max(c(., -1) + 1)} %>%
+    {strrep("*", .)} %>%
+    substring(1, extend)
 
   ret <- list(hazr = hazr[1],
               cint = hazr[-1],
@@ -105,7 +110,7 @@ cox.modl <- function(.data, time = "fuptime", outcome = "hfdiag",
 #'                                  .src = 2)
 #'
 #' }
-cox.arry <- function(proteins, data, time, outc, adjust, .src) {
+cox.arry <- function(proteins, data, time, outc, adjust, .src = 1) {
   tictoc::tic()
   results <- tibble::tibble(term = proteins) %>%
     dplyr::mutate(model = furrr::future_map(term, ~ cox.modl(data, time, outc, .x, adjust), .progress=TRUE)) %>%
