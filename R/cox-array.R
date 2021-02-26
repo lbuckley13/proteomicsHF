@@ -40,10 +40,10 @@
 cox.modl <- function(.data, time = "fuptime", outcome = "hfdiag",
                      protein, .adjust = adjust, extend = 100) {
 
-  formula <- glue::glue("survival::Surv({time}, {outcome}) ~ {protein} + {paste0(.adjust, collapse = '+')}") %>%
+  formula <- glue::glue("survival::Surv({time}, {outcome}) ~ {protein} + {paste0(.adjust, collapse = '+')}")
 
-  cox.mod <- survival::coxph(as.formula(fomula), data = .data) %>%
-    broom::tidy(exponentiate = TRUE)
+  cox <- survival::coxph(as.formula(formula), data = .data)
+  cox.mod <- broom::tidy(cox, exponentiate = TRUE, conf.int = TRUE)
 
   hazr <- cox.mod[1, c('estimate', 'conf.low', 'conf.high')] %>% unlist()
   HR  <- formatC(hazr, format = "f", 3, 5)
@@ -227,16 +227,21 @@ volcanoPlot <- function(data, .pval1, .pval2, suffix, ...) {
   prim.pv <- paste0("pval", suffix[1])
   secn.pv <- paste0("pval", suffix[2])
 
+  size <- plot.df[[prim.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c(4, 2, 1))
+
+  size <- as.numeric(levels(size))[size]
+
   keyvals <- plot.df[[prim.pv]] %>%
     cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
         labels = c("royalblue", "red2", "grey30")) %>%
     as.character()
 
-  names(keyvals) <- plot.df[[secn.pv]] %>%
+  names(keyvals) <- plot.df[[prim.pv]] %>%
     cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
-        labels = c("bfr-sig", "fdr-sig", "not-sig") %>%
-          paste0(suffix[1]) %>%
-          tolower()) %>%
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[1] %>% substr(2,100))) %>%
     as.character()
 
   f <- plot.df[[secn.pv]] %>%
@@ -247,20 +252,21 @@ volcanoPlot <- function(data, .pval1, .pval2, suffix, ...) {
 
   names(shapevals) <- plot.df[[secn.pv]] %>%
     cut(breaks = c(0, 0.05/.pval2, 0.05, 1),
-        labels = c("bfr-sig", "fdr-sig", "not-sig") %>%
-          paste0(suffix[2]) %>%
-          tolower()) %>%
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[2] %>% substr(2,100))) %>%
     as.character()
 
-  EnhancedVolcano::EnhancedVolcano(data, lab = data$term,
+  EnhancedVolcano::EnhancedVolcano(data, lab = data$Name,
                                    x = paste0("hazr", suffix[1]), y = prim.pv,
-                                   xlab = "Hazard Ratio", xlim = c(-0.2, 2.2),
-                                   ylab = "-log10(p)",
+                                   xlab = "Hazard Ratio", xlim = c(0.5, 2.3),
+                                   ylab = expression("-log"[10]*"(P)"),
                                    pCutoff = 0.05 / .pval1,
-                                   FCcutoff = 0, pointSize = 3,
-                                   selectLab = c("N"),
+                                   FCcutoff = 0.5,
+                                   pointSize = size,
                                    hline = c(0.05, 0.05/.pval1, 0.05/.pval2),
                                    colCustom = keyvals,
                                    shapeCustom = shapevals,
+                                   gridlines.major = FALSE,
+                                   gridlines.minor = FALSE,
                                    ...)
 }

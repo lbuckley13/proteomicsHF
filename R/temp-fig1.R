@@ -9,8 +9,7 @@ consort <- function(log.path, mod.path, soma.data, visit.data, labels, fupt, hfd
   spacing <- 0.75
 
   num.prot <- glue::glue('Protein quantification by modified aptamer assay
-                         {prot} Proteins measured in a total of {samp} samples',
-                         prot = dim(soma.data)[2] - 1,
+                         5284 Proteins measured in a total of {samp} samples',
                          samp = dim(soma.data)[1])
 
   num.qc <- glue::glue('{prot} Proteins, {samp} Samples Passed Quality Control',

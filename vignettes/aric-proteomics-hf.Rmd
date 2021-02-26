@@ -38,6 +38,9 @@ source('../R/cox-array.R')
 source('../R/elastic-net.R')
 source('../R/random-forest.R')
 source('../R/wgcna.R')
+source('../R/linear-array.R')
+source('../R/linear-elastic-net.R')
+source('../R/linear-random-forest.R')
 
 library(magrittr)
 
@@ -108,7 +111,8 @@ visit.five <-
 table1 <- 
   make.tables(visit.five, 
               time, outc, 
-              path('table-template.csv'))
+              path('aux-data', 
+                   'table-template.csv'))
 
 res <- 
   consort('.', mods5.path, soma.data.5, 
@@ -126,7 +130,8 @@ visit.three <-
 table2 <- 
   make.tables(visit.three,
               time, outc,
-              path('table-template.csv'))
+              path('aux-data',
+                   'table-template.csv'))
 
 res2 <- 
   consort('.', mods3.path, soma.data.3, 
@@ -142,11 +147,11 @@ res
 knitr::kable(table1)
 ```
 
-```{r v3.consort, fig.height=6, echo=FALSE}
+```{r v3.consort, fig.height=6 echo=FALSE}
 res2
 ```
 
-```{r v3.table1 echo=FALSE}
+```{r v3.table1, echo=FALSE}
 knitr::kable(table2)
 ```
 
@@ -203,6 +208,10 @@ retained <-
                 .pval = 0.05, 2, 
                 .terms = bonferroni$kept)
 
+retained2 <-
+  terms.to.keep(plot.data, 
+                .pval = 0.05/length(bonferroni$kept), 2, 
+                .terms = bonferroni$kept)
 ```
 
 ```{r num.repl.proteins}
@@ -211,7 +220,7 @@ retained <-
   paste0(length(bonferroni$kept)) %>%
   print()
 
-"<=== Sig at BF Visit 5" %>% 
+"<=== Sig at BF Visit 5 " %>% 
   paste0("FDR Visit 3 ===> Proteins: ",
          length(retained$kept)) %>%
   print()
@@ -231,9 +240,13 @@ bf.visit.five <- bonferroni$data %>%
                      dplyr::select(term, desc),
                    by = "term",
                    suffix = c(".V5", ".V3")) %>%
-  dplyr::select(term, Name, desc.V5, desc.V3) %>%
   dplyr::mutate(r = dplyr::if_else(term %in% retained$kept, 
-                                   "+", ""))
+                                   "+", ""),
+                Name = substr(Name, 1, 25)) %>%
+  dplyr::select(term, Name, desc.V5, desc.V3, r)
+
+names(bf.visit.five) <- c("SeqId", "Name", "HR Visit 5", "HR Visit 3", "Repl")
+
 
 ```
 
@@ -244,12 +257,17 @@ plot.data.visit.five <-
   dplyr::left_join(univariate.results,
                    validation.results,
                    by = "term",
-                   suffix = c(".V5", ".V3"))
+                   suffix = c(".V5", ".V3")) %>%
+  dplyr::mutate(Name = substr(labels[term, 'name'], 1, 25))
 
 volcanoPlot(plot.data.visit.five, 
             length(proteins),
             length(bonferroni$kept),
-            suffix = c(".V5", ".V3"))
+            suffix = c(".V5", ".V3"), 
+            title = "ARIC Visit 5 Incident HF",
+            subtitle = "Color = V5 Significance, Shape = V3 Significance") 
+
+           
 
 ```
 

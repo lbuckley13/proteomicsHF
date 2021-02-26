@@ -1,5 +1,5 @@
 .Rproj.user
-.RData
+*.RData
 .RHistory
 inst/extdata/study-data/ARIC*
 .DS_Store
