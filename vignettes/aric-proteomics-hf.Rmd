@@ -94,7 +94,7 @@ soma.data.3 <-
 
 proteins <- labels$term
 time <- "fuptime"
-outc <- "hfdiag"
+outc <- "hfref"
 
 adjust <- adjust.vars$Variable[-1]
 vars <- c(proteins, adjust, time, outc)
@@ -178,6 +178,99 @@ univariate.results <-
            time, outc, adjust, 1)
 
 ```
+
+```{r visit.five.uniprotein.refpef}
+
+# fifth.ref <- fifth.visit %>% 
+#   dplyr::select(dplyr::all_of(c(proteins, adjust, time, 'hfpef')))
+# 
+# fifth.pef <- fifth.visit %>% 
+#   dplyr::select(dplyr::all_of(c(proteins, adjust, time, 'hfref')))
+# 
+# univariate.results.ref <-
+#   cox.arry(proteins, fifth.ref, 
+#            time, 'hfpef', adjust, 1)
+# 
+# univariate.results.pef <-
+#   cox.arry(proteins, fifth.pef, 
+#            time, 'hfref', adjust, 2)
+# 
+# plot.data.refpef <-
+#   dplyr::bind_rows(univariate.results.ref,
+#                    univariate.results.pef) %>%
+#   dplyr::mutate(Name = labels[term, "name"])
+# 
+# bonferroni.ref <- 
+#   terms.to.keep(plot.data.refpef,
+#                 .pval = 0.05/length(proteins), 1)
+# 
+# 
+# bf.visit.five.ref <- bonferroni.ref$data %>% 
+#   dplyr::filter(src == 1) %>% 
+#   dplyr::arrange(pval) %>%
+#   dplyr::left_join(univariate.results.pef %>% 
+#                      dplyr::select(term, desc),
+#                    by = "term",
+#                    suffix = c(".pEF", ".rEF")) %>%
+#   dplyr::mutate(Name = substr(Name, 1, 25)) %>%
+#   dplyr::select(term, Name, desc.pEF, desc.rEF, )
+# 
+# names(bf.visit.five.ref) <- c("SeqId", "Name", "HR Visit 5 pEF", "HR Visit 5 rEF")
+# 
+# bf.visit.five.ref %>% write.csv('~/Desktop/pef.csv', row.names=F)
+# # 
+# 
+# plot.data.visit.five.refpef <- 
+#   dplyr::left_join(univariate.results.ref,
+#                    univariate.results.pef,
+#                    by = "term",
+#                    suffix = c(".pEF", ".rEF")) %>%
+#   dplyr::mutate(Name = substr(labels[term, 'name'], 1, 25))
+# 
+# volcanoPlot.temp(plot.data.visit.five.refpef, 
+#             length(proteins),
+#             length(proteins),
+#             suffix = c(".rEF", ".pEF"), 
+#             title = "ARIC Visit 5 Incident HFpEF (pEF HR on x-axis)",
+#             subtitle = "Color = rEF Significance, Shape = pEF Significance") 
+# 
+```
+
+
+```{r beta.beta}
+# 
+# pdv5 <- plot.data.visit.five.refpef %>%
+#   dplyr::mutate(pv1 = cut(pval.rEF, breaks = c(0, 0.05/4877, 0.05, 1), labels = c("royalblue", "red2", "grey30")),
+#                 pv1 = as.character(pv1),
+#                 pv2 = cut(pval.pEF, breaks = c(0, 0.05/4877, 0.05, 1), labels = c(17, 20, 4)),
+#                 pv2 = as.numeric(levels(pv2))[pv2]) %>%
+#   dplyr::group_by(pv1, pv2) %>%
+#   dplyr::group_split()
+# 
+# par(pty = "s")
+# j <- rep(c(rgb(76/255, 76/255, 76/255, 0.1), rgb(238/255,0,0, 0.2), rgb(0, 35/255, 102/255, 0.6)), each = 3)
+# 
+# for (i in 1:length(pdv5)) {
+#   print(j[i])
+#   plot(log(pdv5[[i]]$hazr.rEF), log(pdv5[[i]]$hazr.pEF), col = j[i], pch = pdv5[[i]]$pv2[1],
+#        xlim = c(-0.5, 0.75),
+#        ylim = c(-0.5, 0.75),
+#        xlab = "",
+#        ylab = "",
+#        asp = 1)
+#   par(new = T)
+# }
+# title(main = "Beta vs Beta Visit 5 rEF vs Visit 5 pEF",
+#       xlab = "Visit 5 rEF Beta",
+#       ylab = "Visit 5 pEF Beta")
+# 
+# abline(h=0, lty=c(2), col = c("black"))
+# abline(v=0, lty=c(2), col = c("black"))
+# abline(a=0, b=1, lty=c(2), col = c("black"))
+# 
+
+```
+
 
 ```{r visit.three.uniprotein}
 
@@ -338,7 +431,7 @@ plot.new.colors(clustered.tree$htree,
 eigenData <- eigenGenes$mergedMEs %>%
   dplyr::mutate_all(scale, T, T) %>%
   dplyr::bind_cols(fifth.visit %>% 
-    dplyr::select(dplyr::all_of(c(adjust, time,outc))))
+    dplyr::select(dplyr::all_of(c(adjust, time, outc, "hfref", "hfpef"))))
 
 mod.summary <- 
   summarize.modules(wg.data, 
@@ -348,6 +441,19 @@ mod.summary <-
 
 module.incident.hf <- cox.arry(mod.summary$color,
                                eigenData, time, outc, 
+                               adjust, .src = 1) %>%
+  dplyr::left_join(mod.summary, by = c("term" = "color")) %>%
+  dplyr::select(term, Name, desc, dplyr::everything())
+
+module.incident.ref <- cox.arry(mod.summary$color,
+                               eigenData, time, "hfref", 
+                               adjust, .src = 1) %>%
+  dplyr::left_join(mod.summary, by = c("term" = "color")) %>%
+  dplyr::select(term, Name, desc, dplyr::everything())
+
+
+module.incident.pef <- cox.arry(mod.summary$color,
+                               eigenData, time, "hfpef", 
                                adjust, .src = 1) %>%
   dplyr::left_join(mod.summary, by = c("term" = "color")) %>%
   dplyr::select(term, Name, desc, dplyr::everything())
@@ -393,6 +499,77 @@ table.echo.regression <-
 univariate.echo.terms.bonf <- 
   lin.reg.terms.to.keep(univariate.echo.models$all.res, 4877)
 
+```
+
+```{r}
+
+univariate.echo.models.unscaled.alladj <- 
+  lin.arry.aggr(proteins,
+                fifth.visit.echo,
+                echo.vars, adjust, labels) 
+
+univariate.echo.models.unscaled.minadj <- 
+  lin.arry.aggr(proteins,
+                fifth.visit.echo,
+                echo.vars, c("age", "race", "sex"), labels) 
+
+univariate.echo.models.scaled.minadj <- 
+  lin.arry.aggr(proteins,
+                fifth.visit.echo.scaled,
+                echo.vars, c("age", "race", "sex"), labels) 
+
+
+uni.echo.terms.bonf.unscaled.all <- 
+  lin.reg.terms.to.keep(univariate.echo.models.unscaled.alladj$all.res, 4877)
+
+uni.echo.terms.bonf.unscaled.min <- 
+  lin.reg.terms.to.keep(univariate.echo.models.unscaled.minadj, 4877)
+
+uni.echo.terms.bonf.scaled.all <- 
+  lin.reg.terms.to.keep(univariate.echo.models, 4877)
+
+uni.echo.terms.bonf.scaled.min <- 
+  lin.reg.terms.to.keep(univariate.echo.models.scaled.minadj, 4877)
+
+```
+
+```{r}
+min.adj <- c("race", "sex", "age")
+
+echo.enet.unscaled.all <- 
+  linear.elastic.net.array(fifth.visit.echo, adjust,
+                           uni.echo.terms.bonf.unscaled.all) %>%
+  linear.get.score.enet.temp(fifth.visit.echo, adjust)
+
+echo.enet.unscaled.min<- 
+  linear.elastic.net.array(fifth.visit.echo, min.adj,
+                           uni.echo.terms.bonf.unscaled.min) %>%
+  linear.get.score.enet.temp(fifth.visit.echo, min.adj)
+
+echo.enet.scaled.min <- 
+  linear.elastic.net.array(fifth.visit.echo.scaled, min.adj,
+                           uni.echo.terms.bonf.scaled.min) %>%
+  linear.get.score.enet.temp(fifth.visit.echo.scaled, min.adj)
+
+echo.enet.scaled.all <- 
+  linear.elastic.net.array(fifth.visit.echo.scaled, adjust,
+                           uni.echo.terms.bonf.scaled.all) %>%
+  linear.get.score.enet.temp(fifth.visit.echo.scaled, adjust)
+```
+
+
+
+```{r}
+
+univ.echo.models.genes <-
+  dplyr::bind_cols(fifth.visit.echo.scaled, 
+                   eigenData %>% dplyr::select(-all_of(c(adjust, time, outc, "hfref", "hfpef"))))
+
+dyn.colors <- names(eigenData %>% dplyr::select(-all_of(c(adjust, time, outc, "hfref", "hfpef"))))
+module.lin.arr <- lin.arry.aggr(dyn.colors, univ.echo.models.genes, echo.vars, adjust, labels)
+
+echo.heatmap <- module.lin.arr$numeric %>% dplyr::select(term, dplyr::ends_with("estm")) %>%
+  tibble::column_to_rownames("term") %>% data.matrix()
 ```
 
 

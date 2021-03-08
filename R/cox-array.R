@@ -270,3 +270,111 @@ volcanoPlot <- function(data, .pval1, .pval2, suffix, ...) {
                                    gridlines.minor = FALSE,
                                    ...)
 }
+
+volcanoPlot.temp <- function(data, .pval1, .pval2, suffix, ...) {
+
+  plot.df <- data
+  prim.pv <- paste0("pval", suffix[1])
+  secn.pv <- paste0("pval", suffix[2])
+
+  size <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c(4, 2, 1))
+
+  size <- as.numeric(levels(size))[size]
+
+  keyvals <- plot.df[[prim.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c("royalblue", "red2", "grey30")) %>%
+    as.character()
+
+  names(keyvals) <- plot.df[[prim.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[1] %>% substr(2,100))) %>%
+    as.character()
+
+  f <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval2, 0.05, 1),
+        labels = c(17, 20, 4))
+
+  shapevals <- as.numeric(levels(f))[f]
+
+  names(shapevals) <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval2, 0.05, 1),
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[2] %>% substr(2,100))) %>%
+    as.character()
+
+  EnhancedVolcano::EnhancedVolcano(data, lab = data$Name,
+                                   x = paste0("hazr", suffix[2]), y = secn.pv,
+                                   xlab = "Hazard Ratio", xlim = c(0.5, 2.3),
+                                   ylab = expression("-log"[10]*"(P)"),
+                                   pCutoff = 0.05 / .pval1,
+                                   FCcutoff = 0.5,
+                                   pointSize = size,
+                                   hline = c(0.05, 0.05/.pval1, 0.05/.pval2),
+                                   colCustom = keyvals,
+                                   shapeCustom = shapevals,
+                                   gridlines.major = FALSE,
+                                   gridlines.minor = FALSE,
+                                   ...)
+}
+
+
+volcanoPlot.temp.lasso <- function(data, .pval1, .pval2, suffix, terms, ...) {
+
+  plot.df <- data
+  prim.pv <- paste0("pval", suffix[1])
+  secn.pv <- paste0("pval", suffix[2])
+
+  size <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c(4, 2, 1))
+
+  size <- as.numeric(levels(size))[size]
+
+  keyvals <- plot.df[[prim.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c("royalblue", "red2", "grey30")) %>%
+    as.character()
+
+  names(keyvals) <- plot.df[[prim.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval1, 0.05, 1),
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[1] %>% substr(2,100))) %>%
+    as.character()
+
+  keyvals[data$term %in% terms] <- "purple"
+  names(keyvals)[data$term %in% terms] <- "LASSO Retained"
+
+  size[data$term %in% terms] <- 8
+
+  plot.df$term
+  f <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval2, 0.05, 1),
+        labels = c(17, 20, 4))
+
+  shapevals <- as.numeric(levels(f))[f]
+
+  names(shapevals) <- plot.df[[secn.pv]] %>%
+    cut(breaks = c(0, 0.05/.pval2, 0.05, 1),
+        labels = c("BF Sig ", "FDR sig ", "Not Sig ") %>%
+          paste0(suffix[2] %>% substr(2,100))) %>%
+    as.character()
+
+  EnhancedVolcano::EnhancedVolcano(data, lab = data$Name,
+                                   x = paste0("hazr", suffix[1]), y = prim.pv,
+                                   xlab = "Hazard Ratio", xlim = c(0.5, 2.3),
+                                   ylab = expression("-log"[10]*"(P)"),
+                                   pCutoff = 0.05 / .pval1,
+                                   FCcutoff = 0.5,
+                                   pointSize = size,
+                                   hline = c(0.05, 0.05/.pval1, 0.05/.pval2),
+                                   colCustom = keyvals,
+                                   shapeCustom = shapevals,
+                                   gridlines.major = FALSE,
+                                   gridlines.minor = FALSE,
+                                   legendPosition = "right",
+                                   ...)
+}

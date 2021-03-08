@@ -3,9 +3,6 @@
 
 lin.modl <- function(.data, outcome, protein, .adjust = adjust, extend = 100) {
 
-  message('\r', crayon::red(outcome) %>% cat(), appendLF = FALSE)
-  flush.console()
-
   formula <- glue::glue("{outcome} ~ {protein} + {paste0(.adjust, collapse = '+')}")
   lin.mod <- lm(as.formula(formula), data = .data) %>%
     broom::tidy(conf.int = TRUE)
@@ -33,10 +30,22 @@ lin.modl <- function(.data, outcome, protein, .adjust = adjust, extend = 100) {
 
 
 lin.arry <- function(proteins, data, lin.outc, adjust, .src = 1) {
+  message(crayon::red('\rCalculating: '), crayon::cyan(lin.outc), appendLF = FALSE)
+  tictoc::tic()
+
   results <- tibble::tibble(term = proteins) %>%
-    dplyr::mutate(model = furrr::future_map(term, ~ lin.modl(data, lin.outc, .x, adjust), .progress = FALSE)) %>%
+    dplyr::mutate(model = furrr::future_map(term, ~ lin.modl(data, lin.outc, .x, adjust))) %>%
     tidyr::unnest_wider(model) %>%
     dplyr::mutate(src = as.factor(.src))
+
+  time <- tictoc::toc(quiet = T)
+  tdif <- formatC(time$toc - time$tic, digits=2, format = "f")
+
+  message(crayon::green('\rCalculating: '),
+          crayon::cyan(lin.outc),
+          paste0(rep(' ', 12 - nchar(lin.outc)), collapse = ''),
+          crayon::green(paste0(' Done. ', tdif, ' Seconds Elapsed.')),
+          appendLF = TRUE)
   return(results)
 }
 

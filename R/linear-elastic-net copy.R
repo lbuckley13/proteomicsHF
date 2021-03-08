@@ -2,7 +2,7 @@ linear.elastic.net <- function(data, terms, adjust, outc, lambda = "lambda.min",
 
   tictoc::tic()
 
-  message('\r', crayon::red(outc) %>% cat(), appendLF = FALSE)
+  message('\r', crayon::red(outc), appendLF = FALSE)
   flush.console()
 
   data.full <- data[complete.cases(data), ]
@@ -18,7 +18,7 @@ linear.elastic.net <- function(data, terms, adjust, outc, lambda = "lambda.min",
   foldId <- seq(10) %>%
     rep(length.out = nrow(mat)) %>%
     sample()
-?
+
   enet <- glmnet::cv.glmnet(x = mat, y = outcome, penalty.factor = p.f,
                             alpha = 1, parallel = TRUE, nfolds = 10,
                             foldid = foldId, trace = 0)
